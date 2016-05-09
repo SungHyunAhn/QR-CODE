@@ -178,7 +178,7 @@ public class InputDataActivity extends Activity{
             public void onClick(View v) {
                 QRCodeWriter gen = new QRCodeWriter();
 
-                //String data = editName.getText().toString() + "!@#@!" +editFreshness.getText().toString() + "!@#@!" + editStock.getText().toString();
+                //String data = editName.getText().toString() + "!@#@!" +editFreshness.getText().toString() + "!@#@!" + editStock.getText().toString();a
                 String data = editName.getText().toString();
 
                 if (editName.length() == 0)
