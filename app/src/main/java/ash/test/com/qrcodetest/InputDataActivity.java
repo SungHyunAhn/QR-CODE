@@ -161,6 +161,7 @@ public class InputDataActivity extends Activity{
                         ImageView view = (ImageView) findViewById(R.id.imageView);
 
                         view.setImageBitmap(bitmap);
+                        //asdfg
                         view.invalidate();
 
                         String extStorageDirectory = Environment.getExternalStorageDirectory().toString();
