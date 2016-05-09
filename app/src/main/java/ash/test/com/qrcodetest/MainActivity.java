@@ -16,10 +16,6 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
 
 import java.util.ArrayList;
 
@@ -27,10 +23,9 @@ public class MainActivity extends AppCompatActivity {
 
     ListView view;
     ListViewAdapter adapter;
-    View cv;
 
-    Button scan;
     Button exp;
+    ImageButton btn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,15 +36,6 @@ public class MainActivity extends AppCompatActivity {
 
         adapter = new ListViewAdapter(this);
         view.setAdapter(adapter);
-
-        scan = (Button) findViewById(R.id.scanBtn);
-        scan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                new IntentIntegrator(MainActivity.this).initiateScan();
-            }
-        });
 
         exp = (Button) findViewById(R.id.expBtn);
         exp.setOnClickListener(new View.OnClickListener() {
@@ -63,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences sp = this.getSharedPreferences("sp", MODE_PRIVATE);
         int size = 0;
-        if (sp.getString("size", "") != "")
+        if (sp.getString("size", "").equals(""))
             size = Integer.parseInt(sp.getString("size", ""));
 
         Log.d("size", String.valueOf(size));
@@ -99,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ImageButton btn = (ImageButton) findViewById(R.id.imageBtn);
+        btn = (ImageButton) findViewById(R.id.imageBtn);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,40 +119,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // QR 코드로 액티비티에 데이터를 받을 경우
-        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
-        if (result != null) {
-            if (result.getContents() == null) {
-                Log.d("MainActivity", "Cancelled scan");
-                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
-            } else {
-                Log.d("MainActivity", "Scanned");
-                //Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
-
-                String name;
-                String freshness;
-                String stock;
-
-                String[] getDataArray = result.getContents().trim().split("!@#@!");
-
-                name = getDataArray[0];
-                freshness = getDataArray[1];
-                stock = getDataArray[2];
-
-                Intent in = new Intent(MainActivity.this, InputDataActivity.class);
-
-                in.putExtra("name", name);
-                in.putExtra("freshness", freshness);
-                in.putExtra("stock", stock);
-
-                startActivityForResult(in, 0);
-            }
-
-        } else {
-            Log.d("MainActivity", "Weird");
-            super.onActivityResult(requestCode, resultCode, intent);
-        }
-
         String position;
         Log.d("requestCode", String.valueOf(requestCode));
 
@@ -177,7 +129,9 @@ public class MainActivity extends AppCompatActivity {
                     position = intent.getStringExtra("position");
                     inputData data = adapter.mListData.get(Integer.parseInt(position));
                     data.setName(intent.getStringExtra("name"));
-                    data.setFreshness(intent.getStringExtra("freshness"));
+                    String date;
+                    date = intent.getStringExtra("year") + "-" + intent.getStringExtra("month") + "-" + intent.getStringExtra("day");
+                    data.setFreshness(date);
                     data.setStock(intent.getStringExtra("stock"));
                     adapter.notifyDataSetChanged();
 
@@ -187,8 +141,11 @@ public class MainActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
                 break;
             case 1:
-                if (resultCode == RESULT_OK)
-                    adapter.addItem(intent.getStringExtra("name"), intent.getStringExtra("freshness"), intent.getStringExtra("stock"));
+                if (resultCode == RESULT_OK) {
+                    String date;
+                    date = intent.getStringExtra("year") + "-" + intent.getStringExtra("month") + "-" + intent.getStringExtra("day");
+                    adapter.addItem(intent.getStringExtra("name"), date, intent.getStringExtra("stock"));
+                }
 
                 adapter.notifyDataSetChanged();
                 break;
@@ -205,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     // 커스텀 리스트 뷰 어댑터
     private class ListViewAdapter extends BaseAdapter {
         private Context mContext = null;
-        private ArrayList<inputData> mListData = new ArrayList<inputData>();
+        private ArrayList<inputData> mListData = new ArrayList<>();
 
         public ListViewAdapter(Context mContext) {
             super();
@@ -237,14 +194,13 @@ public class MainActivity extends AppCompatActivity {
                 LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.listview, null);
 
-                cv = convertView;
-
                 holder.listName = (TextView) convertView.findViewById(R.id.name);
                 holder.listFreshness = (TextView) convertView.findViewById(R.id.freshness);
                 holder.listStock = (TextView) convertView.findViewById(R.id.stock);
 
                 convertView.setTag(holder);
-            } else {
+            }
+            else {
                 holder = (ViewHolder) convertView.getTag();
             }
 
@@ -267,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void addItem(String name, String freshness, String stock) {
-            inputData addInfo = null;
+            inputData addInfo;
             addInfo = new inputData(name, freshness, stock);
 
             mListData.add(addInfo);
@@ -281,6 +237,5 @@ public class MainActivity extends AppCompatActivity {
         public void dataChange() {
             adapter.notifyDataSetChanged();
         }
-
     }
 }

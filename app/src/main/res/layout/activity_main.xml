@@ -18,24 +18,24 @@
                 android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="식료품"
-                android:textSize="15pt"/>
+                android:text="식료품명"
+                android:textSize="25dp"/>
 
             <TextView
                 android:id="@+id/freshness"
                 android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="신선도"
-                android:textSize="15pt"/>
+                android:text="유통기한"
+                android:textSize="25dp"/>
 
             <TextView
                 android:id="@+id/stock"
                 android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="재고수"
-                android:textSize="15pt"/>
+                android:text="재고수량"
+                android:textSize="25dp"/>
         </TableRow>
     </TableLayout>
 
@@ -53,15 +53,6 @@
         android:id="@+id/imageBtn"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
-
-    <Button
-        android:id="@+id/scanBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="scan"
-        android:layout_alignParentBottom="true"
-        android:layout_alignLeft="@+id/listView"
-         />
 
     <Button
         android:id="@+id/expBtn"
