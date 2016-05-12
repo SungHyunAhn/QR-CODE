@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -40,28 +41,40 @@ import java.util.Locale;
  */
 public class InputDataActivity extends Activity{
 
-    Button readQRbtn;
+    Button QRdataRead;
+    Button QRdataDelete;
     Button makeQRbtn;
     Button delData;
     Button changeData;
     EditText editName;
     //EditText editFreshness;
-    Spinner spinnerFreshness;
+    Spinner spinnerYear;
+    Spinner spinnerMonth;
+    Spinner spinnerDay;
     EditText editStock;
     String freshness;
     String position;
     Intent getIntent;
+    int[] arr = new int[3];
+
+    Date date;
+
+    public static Date getDate(int year, int month, int date, int hour, int minute, int second) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(year, month - 1, date, hour, minute, second);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        return cal.getTime();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data);
 
-        readQRbtn = (Button)findViewById(R.id.readQRbtn);
+        QRdataRead = (Button)findViewById(R.id.QRdataRead);
+        QRdataDelete = (Button)findViewById(R.id.QRdataDelete);
         makeQRbtn = (Button)findViewById(R.id.makeQRbtn);
-
-        readQRbtn.setText("QR 코드 읽기");
-        makeQRbtn.setText("QR 코드 생성");
 
         delData = (Button)findViewById(R.id.delData);
         changeData = (Button)findViewById(R.id.changeData);
@@ -73,22 +86,53 @@ public class InputDataActivity extends Activity{
 
         //editFreshness = (EditText)findViewById(R.id.editFreshness);
 
-        spinnerFreshness = (Spinner)findViewById(R.id.spinnerFreshness);
-        ArrayAdapter ad = ArrayAdapter.createFromResource(this, R.array.freshness, R.layout.spinnerlayout);
-        ad.setDropDownViewResource(R.layout.spinnerlayout);
-        spinnerFreshness.setAdapter(ad);
+        spinnerYear = (Spinner)findViewById(R.id.spinnerYear);
+        ArrayAdapter adsy = ArrayAdapter.createFromResource(this, R.array.year, R.layout.spinnerlayout);
+        adsy.setDropDownViewResource(R.layout.spinnerlayout);
+        spinnerYear.setAdapter(adsy);
 
-        spinnerFreshness.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spinnerMonth = (Spinner)findViewById(R.id.spinnerMonth);
+        ArrayAdapter adsm = ArrayAdapter.createFromResource(this, R.array.month, R.layout.spinnerlayout);
+        adsm.setDropDownViewResource(R.layout.spinnerlayout);
+        spinnerMonth.setAdapter(adsm);
+
+        spinnerDay = (Spinner)findViewById(R.id.spinnerDay);
+        ArrayAdapter adsd = ArrayAdapter.createFromResource(this, R.array.day, R.layout.spinnerlayout);
+        adsd.setDropDownViewResource(R.layout.spinnerlayout);
+        spinnerDay.setAdapter(adsd);
+
+        spinnerYear.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                freshness = spinnerFreshness.getSelectedItem().toString();
+                arr[0] = Integer.parseInt(spinnerYear.getSelectedItem().toString());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        spinnerMonth.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                arr[1] = Integer.parseInt(spinnerMonth.getSelectedItem().toString());
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
+        });
 
+        spinnerDay.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                arr[2] = Integer.parseInt(spinnerDay.getSelectedItem().toString());
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
 
+            }
         });
 
         editStock = (EditText)findViewById(R.id.editStock);
@@ -100,22 +144,29 @@ public class InputDataActivity extends Activity{
 
         if(getIntent.getStringExtra("freshness") != null){
             if(getIntent.getStringExtra("freshness").equals("좋음"))
-                spinnerFreshness.setSelection(0);
+                spinnerYear.setSelection(0);
             else if(getIntent.getStringExtra("freshness").equals("보통"))
-                spinnerFreshness.setSelection(1);
+                spinnerYear.setSelection(1);
             else
-                spinnerFreshness.setSelection(2);
+                spinnerYear.setSelection(2);
         }
 
         if(getIntent.getStringExtra("stock") != null)
             editStock.setText(getIntent.getStringExtra("stock"));
 
         if(getIntent.getStringExtra("position") != null) {
-            position = getIntent.getStringExtra("position").toString();
+            position = getIntent.getStringExtra("position");
             Log.d("position", position);
         }
 
-        readQRbtn.setOnClickListener(new View.OnClickListener() {
+        QRdataRead.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new IntentIntegrator(InputDataActivity.this).initiateScan();
+            }
+        });
+
+        QRdataDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 new IntentIntegrator(InputDataActivity.this).initiateScan();
@@ -127,17 +178,18 @@ public class InputDataActivity extends Activity{
             public void onClick(View v) {
                 QRCodeWriter gen = new QRCodeWriter();
 
-                //String data = editName.getText().toString() + "!@#@!" +editFreshness.getText().toString() + "!@#@!" + editStock.getText().toString();
-                String data = editName.getText().toString() + "!@#@!" + spinnerFreshness.getSelectedItem().toString() + "!@#@!" + editStock.getText().toString();
+                //String data = editName.getText().toString() + "!@#@!" +editFreshness.getText().toString() + "!@#@!" + editStock.getText().toString();a
+                String data = editName.getText().toString();
 
                 if (editName.length() == 0)
                     Toast.makeText(InputDataActivity.this, "식재료를 입력하세요", Toast.LENGTH_SHORT).show();
                 /*
                 else if(editFreshness.length() == 0){
                     Toast.makeText(InputDataActivity.this, "신선도를 입력하세요", Toast.LENGTH_SHORT).show();
-                }*/
+                }
                 else if(editStock.length() == 0)
                     Toast.makeText(InputDataActivity.this, "재고수를 입력하세요", Toast.LENGTH_SHORT).show();
+                    */
                 else {
                     try {
                         String fileName;
@@ -161,6 +213,7 @@ public class InputDataActivity extends Activity{
                         ImageView view = (ImageView) findViewById(R.id.imageView);
 
                         view.setImageBitmap(bitmap);
+
                         view.invalidate();
 
                         String extStorageDirectory = Environment.getExternalStorageDirectory().toString();
@@ -211,7 +264,9 @@ public class InputDataActivity extends Activity{
                 intent.putExtra("position", position);
                 intent.putExtra("name", editName.getText().toString());
                 //intent.putExtra("freshness", editFreshness.getText().toString());
-                intent.putExtra("freshness", spinnerFreshness.getSelectedItem().toString());
+                intent.putExtra("year", String.valueOf(arr[0]));
+                intent.putExtra("month", String.valueOf(arr[1]));
+                intent.putExtra("day", String.valueOf(arr[2]));
                 intent.putExtra("stock", editStock.getText().toString());
 
                 setResult(RESULT_OK, intent);
@@ -247,6 +302,16 @@ public class InputDataActivity extends Activity{
         });
     }
 
+    protected static boolean isNumber(String string){
+        try{
+            Integer.parseInt(string);
+            return true;
+        }
+        catch(NumberFormatException e){
+            return false;
+        }
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -259,32 +324,14 @@ public class InputDataActivity extends Activity{
             }
             else {
                 Log.d("InputDataActivity", "Scanned");
-                //Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
+                String r = result.getContents();
 
-
-                String name;
-                String freshness1;
-                String stock;
-
-                String[] getDataArray = result.getContents().trim().split("!@#@!");
-
-                name = getDataArray[0];
-                freshness1 = getDataArray[1];
-                stock = getDataArray[2];
-
-                editName.setText(name);
-
-                if(freshness1.equals("좋음"))
-                    spinnerFreshness.setSelection(0);
-                else if(freshness1.equals("보통"))
-                    spinnerFreshness.setSelection(1);
+                if(isNumber(r))
+                    editStock.setText(r);
                 else
-                    spinnerFreshness.setSelection(2);
-
-                editStock.setText(stock);
+                    editName.setText(r);
 
             }
-
         }
         else {
             Log.d("InputDataActivity", "Weird");
