@@ -17,7 +17,11 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,6 +40,24 @@ public class MainActivity extends AppCompatActivity {
 
         adapter = new ListViewAdapter(this);
         view.setAdapter(adapter);
+
+        SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(view, new SwipeDismissListViewTouchListener.DismissCallbacks() {
+            @Override
+            public boolean canDismiss(int position) {
+                return true;
+            }
+
+            @Override
+            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+                for (int position : reverseSortedPositions) {
+                    adapter.remove(position);
+                }
+                adapter.notifyDataSetChanged();
+            }
+        });
+
+        view.setOnTouchListener(touchListener);
+        view.setOnScrollListener(touchListener.makeScrollListener());
 
         exp = (Button) findViewById(R.id.expBtn);
         exp.setOnClickListener(new View.OnClickListener() {
@@ -79,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 inputData data = adapter.mListData.get(position);
+                Log.d("data",data.getFreshness());
                 Intent intent = new Intent(MainActivity.this, InputDataActivity.class);
                 String pos = String.valueOf(position);
                 intent.putExtra("position", pos);
@@ -98,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, InputDataActivity.class);
                 String pos = String.valueOf(size);
                 intent.putExtra("position", pos);
+                intent.putExtra("new","new");
 
                 startActivityForResult(intent, 1);
             }
@@ -215,8 +239,27 @@ public class MainActivity extends AppCompatActivity {
             holder.listFreshness.setText(mData.getFreshness());
             holder.listStock.setText(mData.getStock());
 
-            if (holder.listFreshness.getText().toString().equals("나쁨")) {
+            long now = System.currentTimeMillis();
+            long diffDays = 0;
+            Date nowDate = getDate();
+
+            String freshness = holder.listFreshness.getText().toString();
+            SimpleDateFormat dateFormat = new  SimpleDateFormat("yy-MM-dd", java.util.Locale.getDefault());
+
+            try {
+                Date freshnessDate = dateFormat.parse(freshness);
+                long diff = freshnessDate.getTime() - nowDate.getTime();
+                diffDays = diff / (24 * 60 * 60 * 1000);
+                Log.d("day",String.valueOf(diffDays));
+            }
+            catch (ParseException e) {
+                e.printStackTrace();
+            }
+            if (diffDays<3) {
                 convertView.setBackgroundColor(Color.RED);
+            }
+            else if (diffDays<5) {
+                convertView.setBackgroundColor(Color.YELLOW);
             }
             else{
                 convertView.setBackgroundColor(Color.WHITE);
@@ -242,5 +285,27 @@ public class MainActivity extends AppCompatActivity {
         public void dataChange() {
             adapter.notifyDataSetChanged();
         }
+    }
+
+    public static Date getDate() {
+        /*
+        Calendar cal = Calendar.getInstance();
+        int year = cal.get(cal.YEAR);
+        int month = cal.get(cal.MONTH);
+        int date = cal.get(cal.DATE);
+        cal.set(year, month, date);
+        cal.set(Calendar.MILLISECOND, 0);
+        */
+
+        Calendar cal = Calendar.getInstance();
+        int year = cal.get(cal.YEAR);
+        int month = cal.get(cal.MONTH);
+        int date = cal.get(cal.DATE);
+
+        cal.set(year, month, date, 0, 0, 0);
+
+        cal.set(Calendar.MILLISECOND, 0);
+
+        return cal.getTime();
     }
 }

@@ -84,8 +84,6 @@ public class InputDataActivity extends Activity{
 
         editName = (EditText)findViewById(R.id.editName);
 
-        //editFreshness = (EditText)findViewById(R.id.editFreshness);
-
         spinnerYear = (Spinner)findViewById(R.id.spinnerYear);
         ArrayAdapter adsy = ArrayAdapter.createFromResource(this, R.array.year, R.layout.spinnerlayout);
         adsy.setDropDownViewResource(R.layout.spinnerlayout);
@@ -139,25 +137,7 @@ public class InputDataActivity extends Activity{
 
         getIntent = getIntent();
 
-        if(getIntent.getStringExtra("name") != null)
-            editName.setText(getIntent.getStringExtra("name"));
-
-        if(getIntent.getStringExtra("freshness") != null){
-            if(getIntent.getStringExtra("freshness").equals("좋음"))
-                spinnerYear.setSelection(0);
-            else if(getIntent.getStringExtra("freshness").equals("보통"))
-                spinnerYear.setSelection(1);
-            else
-                spinnerYear.setSelection(2);
-        }
-
-        if(getIntent.getStringExtra("stock") != null)
-            editStock.setText(getIntent.getStringExtra("stock"));
-
-        if(getIntent.getStringExtra("position") != null) {
-            position = getIntent.getStringExtra("position");
-            Log.d("position", position);
-        }
+        setData(getIntent);
 
         QRdataRead.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -178,18 +158,6 @@ public class InputDataActivity extends Activity{
             public void onClick(View v) {
                 QRCodeWriter gen = new QRCodeWriter();
 
-                //String data = editName.getText().toString() + "!@#@!" +editFreshness.getText().toString() + "!@#@!" + editStock.getText().toString();a
-
-                /*
-                if (editName.length() == 0)
-                    Toast.makeText(InputDataActivity.this, "식재료를 입력하세요", Toast.LENGTH_SHORT).show();
-
-                else if(editFreshness.length() == 0){
-                    Toast.makeText(InputDataActivity.this, "신선도를 입력하세요", Toast.LENGTH_SHORT).show();
-                }
-                else if(editStock.length() == 0)
-                    Toast.makeText(InputDataActivity.this, "재고수를 입력하세요", Toast.LENGTH_SHORT).show();
-                */
                 if(editName.length() == 0 && editStock.length() == 0)
                     Toast.makeText(InputDataActivity.this, "식료품명이나 재고수량을 입력하세요", Toast.LENGTH_SHORT).show();
 
@@ -201,17 +169,20 @@ public class InputDataActivity extends Activity{
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA);
                         fileName = String.valueOf(sdf.format(day));
 
-                        if(!editName.getText().toString().equals("")) {
+                        if(!editName.getText().toString().equals("") && editStock.length() == 0) {
                             fileName = fileName + " " + editName.getText().toString();
                             data = editName.getText().toString();
+                            Log.d("data",data);
                         }
-                        else if(!editStock.getText().toString().equals("")) {
+                        else if(!editStock.getText().toString().equals("") && editName.length() == 0) {
                             fileName = fileName + " " + editStock.getText().toString();
                             data = editStock.getText().toString();
+                            Log.d("data",data);
                         }
                         else {
-                            fileName = fileName + " " + editName.getText().toString() + editStock.getText().toString();
+                            fileName = fileName + " " + editName.getText().toString() + " " + editStock.getText().toString();
                             data =  editName.getText().toString() + "!@#@!" + editStock.getText().toString();
+                            Log.d("data",data);
                         }
 
                         final int WIDTH = 480;
@@ -295,40 +266,34 @@ public class InputDataActivity extends Activity{
         delData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(InputDataActivity.this);
-                builder.setTitle("식료품 삭제")
-                        .setMessage("정말로 식료품을 목록에서 삭제하시겠습니까?")
-                        .setCancelable(false)
-                        .setPositiveButton("확인", new DialogInterface.OnClickListener(){
-                            public void onClick(DialogInterface dialog, int whichButton){
-                                Intent intent = new Intent();
-                                intent.putExtra("position", position);
-                                setResult(2,intent);
-                                finish();
-                            }
-                        })
+                if (getIntent.getStringExtra("new").equals("new")) {
+                    Toast.makeText(InputDataActivity.this, "새 항목 만들기여서 삭제할 항목이 선택되지 않았습니다.", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(InputDataActivity.this);
+                    builder.setTitle("식료품 삭제")
+                            .setMessage("정말로 식료품을 목록에서 삭제하시겠습니까?")
+                            .setCancelable(false)
+                            .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    Intent intent = new Intent();
+                                    intent.putExtra("position", position);
+                                    setResult(2, intent);
+                                    finish();
+                                }
+                            })
 
-                        .setNegativeButton("취소", new DialogInterface.OnClickListener(){
-                            public void onClick(DialogInterface dialog, int whichButton){
-                                dialog.cancel();
-                            }
-                        });
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                            .setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    dialog.cancel();
+                                }
+                            });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
             }
         });
     }
-
-    protected static boolean isNumber(String string){
-        try{
-            Integer.parseInt(string);
-            return true;
-        }
-        catch(NumberFormatException e){
-            return false;
-        }
-    }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -343,7 +308,6 @@ public class InputDataActivity extends Activity{
                 Log.d("InputDataActivity", "Scanned");
                 String r = result.getContents();
 
-
                 if(isNumber(r))
                     editStock.setText(r);
                 else {
@@ -356,12 +320,12 @@ public class InputDataActivity extends Activity{
                         stock = getDataArray[1];
                         editName.setText(name);
                         editStock.setText(stock);
+                        Log.d("name",name);
+                        Log.d("stock",stock);
                     }
                     catch(ArrayIndexOutOfBoundsException e){
-
+                        editName.setText(r);
                     }
-
-                    editName.setText(r);
                 }
             }
 
@@ -369,6 +333,200 @@ public class InputDataActivity extends Activity{
         else {
             Log.d("InputDataActivity", "Weird");
             super.onActivityResult(requestCode, resultCode, data);
+            Toast.makeText(InputDataActivity.this, "else", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void setData(Intent getIntent) {
+        if(getIntent.getStringExtra("name") != null)
+            editName.setText(getIntent.getStringExtra("name"));
+
+        String[] freshness;
+        try {
+            freshness = getIntent.getStringExtra("freshness").split("-");
+
+            switch(freshness[0]){
+                case "16" :
+                    spinnerYear.setSelection(0);
+                    break;
+                case "17" :
+                    spinnerYear.setSelection(1);
+                    break;
+                case "18" :
+                    spinnerYear.setSelection(2);
+                    break;
+                case "19" :
+                    spinnerYear.setSelection(3);
+                    break;
+                case "20" :
+                    spinnerYear.setSelection(4);
+                    break;
+                case "21" :
+                    spinnerYear.setSelection(5);
+                    break;
+                case "22" :
+                    spinnerYear.setSelection(6);
+                    break;
+                case "23" :
+                    spinnerYear.setSelection(7);
+                    break;
+            }
+
+            switch (freshness[1]){
+                case "1" :
+                    spinnerMonth.setSelection(0);
+                    break;
+                case "2" :
+                    spinnerMonth.setSelection(1);
+                    break;
+                case "3" :
+                    spinnerMonth.setSelection(2);
+                    break;
+                case "4" :
+                    spinnerMonth.setSelection(3);
+                    break;
+                case "5" :
+                    spinnerMonth.setSelection(4);
+                    break;
+                case "6" :
+                    spinnerMonth.setSelection(5);
+                    break;
+                case "7" :
+                    spinnerMonth.setSelection(6);
+                    break;
+                case "8" :
+                    spinnerMonth.setSelection(7);
+                    break;
+                case "9" :
+                    spinnerMonth.setSelection(8);
+                    break;
+                case "10" :
+                    spinnerMonth.setSelection(9);
+                    break;
+                case "11" :
+                    spinnerMonth.setSelection(10);
+                    break;
+                case "12" :
+                    spinnerMonth.setSelection(11);
+                    break;
+            }
+
+            switch (freshness[2]){
+                case "1" :
+                    spinnerDay.setSelection(0);
+                    break;
+                case "2" :
+                    spinnerDay.setSelection(1);
+                    break;
+                case "3" :
+                    spinnerDay.setSelection(2);
+                    break;
+                case "4" :
+                    spinnerDay.setSelection(3);
+                    break;
+                case "5" :
+                    spinnerDay.setSelection(4);
+                    break;
+                case "6" :
+                    spinnerDay.setSelection(5);
+                    break;
+                case "7" :
+                    spinnerDay.setSelection(6);
+                    break;
+                case "8" :
+                    spinnerDay.setSelection(7);
+                    break;
+                case "9" :
+                    spinnerDay.setSelection(8);
+                    break;
+                case "10" :
+                    spinnerDay.setSelection(9);
+                    break;
+                case "11" :
+                    spinnerDay.setSelection(10);
+                    break;
+                case "12" :
+                    spinnerDay.setSelection(11);
+                    break;
+                case "13" :
+                    spinnerDay.setSelection(12);
+                    break;
+                case "14" :
+                    spinnerDay.setSelection(13);
+                    break;
+                case "15" :
+                    spinnerDay.setSelection(14);
+                    break;
+                case "16" :
+                    spinnerDay.setSelection(15);
+                    break;
+                case "17" :
+                    spinnerDay.setSelection(16);
+                    break;
+                case "18" :
+                    spinnerDay.setSelection(17);
+                    break;
+                case "19" :
+                    spinnerDay.setSelection(18);
+                    break;
+                case "20" :
+                    spinnerDay.setSelection(19);
+                    break;
+                case "21" :
+                    spinnerDay.setSelection(20);
+                    break;
+                case "22" :
+                    spinnerDay.setSelection(21);
+                    break;
+                case "23" :
+                    spinnerDay.setSelection(22);
+                    break;
+                case "24" :
+                    spinnerDay.setSelection(23);
+                    break;
+                case "25" :
+                    spinnerDay.setSelection(24);
+                    break;
+                case "26" :
+                    spinnerDay.setSelection(25);
+                    break;
+                case "27" :
+                    spinnerDay.setSelection(26);
+                    break;
+                case "28" :
+                    spinnerDay.setSelection(27);
+                    break;
+                case "29" :
+                    spinnerDay.setSelection(28);
+                    break;
+                case "30" :
+                    spinnerDay.setSelection(29);
+                    break;
+                case "31" :
+                    spinnerDay.setSelection(30);
+                    break;
+            }
+        }
+        catch (NullPointerException e){
+            e.printStackTrace();
+        }
+
+        if(getIntent.getStringExtra("stock") != null)
+            editStock.setText(getIntent.getStringExtra("stock"));
+
+        if(getIntent.getStringExtra("position") != null) {
+            position = getIntent.getStringExtra("position");
+        }
+    }
+
+    protected static boolean isNumber(String string){
+        try{
+            Integer.parseInt(string);
+            return true;
+        }
+        catch(NumberFormatException e){
+            return false;
+        }
+    }
+
 }
