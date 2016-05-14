@@ -179,23 +179,40 @@ public class InputDataActivity extends Activity{
                 QRCodeWriter gen = new QRCodeWriter();
 
                 //String data = editName.getText().toString() + "!@#@!" +editFreshness.getText().toString() + "!@#@!" + editStock.getText().toString();a
-                String data = editName.getText().toString();
 
+                /*
                 if (editName.length() == 0)
                     Toast.makeText(InputDataActivity.this, "식재료를 입력하세요", Toast.LENGTH_SHORT).show();
-                /*
+
                 else if(editFreshness.length() == 0){
                     Toast.makeText(InputDataActivity.this, "신선도를 입력하세요", Toast.LENGTH_SHORT).show();
                 }
                 else if(editStock.length() == 0)
                     Toast.makeText(InputDataActivity.this, "재고수를 입력하세요", Toast.LENGTH_SHORT).show();
-                    */
+                */
+                if(editName.length() == 0 && editStock.length() == 0)
+                    Toast.makeText(InputDataActivity.this, "식료품명이나 재고수량을 입력하세요", Toast.LENGTH_SHORT).show();
+
                 else {
                     try {
+                        String data;
                         String fileName;
                         Date day = new Date();
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA);
-                        fileName = String.valueOf(sdf.format(day)) + " " + editName.getText().toString();
+                        fileName = String.valueOf(sdf.format(day));
+
+                        if(!editName.getText().toString().equals("")) {
+                            fileName = fileName + " " + editName.getText().toString();
+                            data = editName.getText().toString();
+                        }
+                        else if(!editStock.getText().toString().equals("")) {
+                            fileName = fileName + " " + editStock.getText().toString();
+                            data = editStock.getText().toString();
+                        }
+                        else {
+                            fileName = fileName + " " + editName.getText().toString() + editStock.getText().toString();
+                            data =  editName.getText().toString() + "!@#@!" + editStock.getText().toString();
+                        }
 
                         final int WIDTH = 480;
                         final int HEIGHT = 480;
@@ -326,12 +343,28 @@ public class InputDataActivity extends Activity{
                 Log.d("InputDataActivity", "Scanned");
                 String r = result.getContents();
 
+
                 if(isNumber(r))
                     editStock.setText(r);
-                else
-                    editName.setText(r);
+                else {
+                    String[] getDataArray;
+                    String name;
+                    String stock;
+                    try {
+                        getDataArray = r.trim().split("!@#@!");
+                        name = getDataArray[0];
+                        stock = getDataArray[1];
+                        editName.setText(name);
+                        editStock.setText(stock);
+                    }
+                    catch(ArrayIndexOutOfBoundsException e){
 
+                    }
+
+                    editName.setText(r);
+                }
             }
+
         }
         else {
             Log.d("InputDataActivity", "Weird");

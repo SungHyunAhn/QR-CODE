@@ -49,8 +49,13 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences sp = this.getSharedPreferences("sp", MODE_PRIVATE);
         int size = 0;
-        if (sp.getString("size", "").equals(""))
-            size = Integer.parseInt(sp.getString("size", ""));
+        try {
+            if (!sp.getString("size", "").equals(""))
+                size = Integer.parseInt(sp.getString("size", ""));
+        }
+        catch (NumberFormatException e){
+
+        }
 
         Log.d("size", String.valueOf(size));
 
