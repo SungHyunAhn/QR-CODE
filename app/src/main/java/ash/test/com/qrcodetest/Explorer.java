@@ -40,7 +40,7 @@ public class Explorer extends Activity {
         ArrayList<String> fileList = new ArrayList<String>();
 
         if(files == null){
-            Toast.makeText(Explorer.this, "QR 코드 이미지가 존재하지 않습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(Explorer.this, "QR 코드 이미지가 존재하지 않습니다.", Toast.LENGTH_LONG).show();
             finish();
         }
         else{

@@ -16,6 +16,10 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,8 +32,12 @@ public class MainActivity extends AppCompatActivity {
     ListView view;
     ListViewAdapter adapter;
 
+    Button del;
     Button exp;
     ImageButton btn;
+
+    String delData;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +67,15 @@ public class MainActivity extends AppCompatActivity {
         view.setOnTouchListener(touchListener);
         view.setOnScrollListener(touchListener.makeScrollListener());
 
+        del = (Button)findViewById(R.id.delBtn);
+        del.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "삭제할 식료품명을 스캔하면 즉시 삭제됩니다.", Toast.LENGTH_LONG).show();
+                new IntentIntegrator(MainActivity.this).initiateScan();
+            }
+        });
+
         exp = (Button) findViewById(R.id.expBtn);
         exp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 size = Integer.parseInt(sp.getString("size", ""));
         }
         catch (NumberFormatException e){
-
+            e.printStackTrace();
         }
 
         Log.d("size", String.valueOf(size));
@@ -148,37 +165,62 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        String position;
-        Log.d("requestCode", String.valueOf(requestCode));
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
 
-        // 다른 액티비티에서 데이터를 받는 경우
-        switch (requestCode) {
-            case 0:
-                if (resultCode == RESULT_OK) {
-                    position = intent.getStringExtra("position");
-                    inputData data = adapter.mListData.get(Integer.parseInt(position));
-                    data.setName(intent.getStringExtra("name"));
-                    String date;
-                    date = intent.getStringExtra("year") + "-" + intent.getStringExtra("month") + "-" + intent.getStringExtra("day");
-                    data.setFreshness(date);
-                    data.setStock(intent.getStringExtra("stock"));
+       if(result != null){
+           if(result.getContents() == null) {
+               Log.d("MainActivity", "Cancelled scan");
+               Toast.makeText(this, "Cancelled Scan", Toast.LENGTH_LONG).show();
+           }
+           else{
+               int tmp = result.getContents().indexOf("!@#@!");
+               if(tmp == -1){
+                   delData = result.getContents();
+                   Log.d("delData",delData);
+               }
+               else{
+                   delData = result.getContents().substring(0,tmp);
+                   Log.d("delData",delData);
+               }
+               for(int i = 0; i < adapter.getCount(); i++){
+                   inputData data = adapter.mListData.get(i);
+                   if(data.getName().equals(delData))
+                       adapter.remove(i);
+               }
+           }
+       }
+       else{
+            String position;
+            Log.d("requestCode", String.valueOf(requestCode));
+
+            // 다른 액티비티에서 데이터를 받는 경우
+            switch (requestCode) {
+                case 0:
+                    if (resultCode == RESULT_OK) {
+                        position = intent.getStringExtra("position");
+                        inputData data = adapter.mListData.get(Integer.parseInt(position));
+                        data.setName(intent.getStringExtra("name"));
+                        String date;
+                        date = intent.getStringExtra("year") + "-" + intent.getStringExtra("month") + "-" + intent.getStringExtra("day");
+                        data.setFreshness(date);
+                        data.setStock(intent.getStringExtra("stock"));
+                        adapter.notifyDataSetChanged();
+
+                    } else if (resultCode == 2) {
+                        adapter.remove(Integer.parseInt(intent.getStringExtra("position")));
+                    }
                     adapter.notifyDataSetChanged();
-
-                } else if (resultCode == 2) {
-                    adapter.remove(Integer.parseInt(intent.getStringExtra("position")));
-                }
-                adapter.notifyDataSetChanged();
-                break;
-            case 1:
-                if (resultCode == RESULT_OK) {
-                    String date;
-                    date = intent.getStringExtra("year") + "-" + intent.getStringExtra("month") + "-" + intent.getStringExtra("day");
-                    adapter.addItem(intent.getStringExtra("name"), date, intent.getStringExtra("stock"));
-                }
-
-                adapter.notifyDataSetChanged();
-                break;
-        }
+                    break;
+                case 1:
+                    if (resultCode == RESULT_OK) {
+                        String date;
+                        date = intent.getStringExtra("year") + "-" + intent.getStringExtra("month") + "-" + intent.getStringExtra("day");
+                        adapter.addItem(intent.getStringExtra("name"), date, intent.getStringExtra("stock"));
+                    }
+                  adapter.notifyDataSetChanged();
+                  break;
+            }
+       }
     }
 
     // 뷰홀더
@@ -239,7 +281,6 @@ public class MainActivity extends AppCompatActivity {
             holder.listFreshness.setText(mData.getFreshness());
             holder.listStock.setText(mData.getStock());
 
-            long now = System.currentTimeMillis();
             long diffDays = 0;
             Date nowDate = getDate();
 
@@ -288,19 +329,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static Date getDate() {
-        /*
         Calendar cal = Calendar.getInstance();
-        int year = cal.get(cal.YEAR);
-        int month = cal.get(cal.MONTH);
-        int date = cal.get(cal.DATE);
-        cal.set(year, month, date);
-        cal.set(Calendar.MILLISECOND, 0);
-        */
-
-        Calendar cal = Calendar.getInstance();
-        int year = cal.get(cal.YEAR);
-        int month = cal.get(cal.MONTH);
-        int date = cal.get(cal.DATE);
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
+        int date = cal.get(Calendar.DATE);
 
         cal.set(year, month, date, 0, 0, 0);
 

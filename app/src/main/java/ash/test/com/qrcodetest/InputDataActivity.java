@@ -43,7 +43,6 @@ import java.util.Locale;
 public class InputDataActivity extends Activity{
 
     Button QRdataRead;
-    Button QRdataDelete;
     Button makeQRbtn;
     Button delData;
     Button changeData;
@@ -74,7 +73,6 @@ public class InputDataActivity extends Activity{
         setContentView(R.layout.activity_data);
 
         QRdataRead = (Button)findViewById(R.id.QRdataRead);
-        QRdataDelete = (Button)findViewById(R.id.QRdataDelete);
         makeQRbtn = (Button)findViewById(R.id.makeQRbtn);
 
         delData = (Button)findViewById(R.id.delData);
@@ -147,12 +145,6 @@ public class InputDataActivity extends Activity{
             }
         });
 
-        QRdataDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new IntentIntegrator(InputDataActivity.this).initiateScan();
-            }
-        });
 
         makeQRbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -169,7 +161,7 @@ public class InputDataActivity extends Activity{
                     builder.setPositiveButton("식료품명", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
                             if(editName.length() == 0){
-                                Toast.makeText(InputDataActivity.this, "식료품명을 입력해주세요.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(InputDataActivity.this, "식료품명을 입력해주세요.", Toast.LENGTH_LONG).show();
                             }
                             else {
                                 fileName = fileName + " 식료품명 : " + editName.getText().toString();
@@ -182,7 +174,7 @@ public class InputDataActivity extends Activity{
                     builder.setNeutralButton("재고등록", new DialogInterface.OnClickListener(){
                         public void onClick(DialogInterface dialog, int which) {
                             if(editName.length() == 0 || editStock.length() == 0){
-                                Toast.makeText(InputDataActivity.this, "재고의 정보를 전부 입력해주세요.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(InputDataActivity.this, "재고의 정보를 전부 입력해주세요.", Toast.LENGTH_LONG).show();
                             }
                             else {
                                 fileName = fileName + " 식료품명 : " + editName.getText().toString() + " 재고수량 : " + editStock.getText().toString();
@@ -195,7 +187,7 @@ public class InputDataActivity extends Activity{
                     builder.setNegativeButton("재고수량", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
                             if(editStock.length() == 0){
-                                Toast.makeText(InputDataActivity.this, "재고수량을 입력해주세요.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(InputDataActivity.this, "재고수량을 입력해주세요.", Toast.LENGTH_LONG).show();
                             }
                             else {
                                 fileName = fileName + " 재고수량 : " + editStock.getText().toString();
@@ -235,10 +227,11 @@ public class InputDataActivity extends Activity{
         delData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (getIntent.getStringExtra("new").equals("new")) {
-                    Toast.makeText(InputDataActivity.this, "새 항목 만들기여서 삭제할 항목이 선택되지 않았습니다.", Toast.LENGTH_SHORT).show();
+                try {
+                    if (getIntent.getStringExtra("new").equals("new"))
+                        Toast.makeText(InputDataActivity.this, "새 항목 만들기여서 삭제할 항목이 선택되지 않았습니다.", Toast.LENGTH_LONG).show();
                 }
-                else {
+                catch(NullPointerException e){
                     AlertDialog.Builder builder = new AlertDialog.Builder(InputDataActivity.this);
                     builder.setTitle("식료품 삭제")
                             .setMessage("정말로 해당 항목을 목록에서 삭제하시겠습니까?")
@@ -302,7 +295,7 @@ public class InputDataActivity extends Activity{
         else {
             Log.d("InputDataActivity", "Weird");
             super.onActivityResult(requestCode, resultCode, data);
-            Toast.makeText(InputDataActivity.this, "else", Toast.LENGTH_SHORT).show();
+            Toast.makeText(InputDataActivity.this, "else", Toast.LENGTH_LONG).show();
         }
     }
 

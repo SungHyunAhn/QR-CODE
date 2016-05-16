@@ -47,6 +47,17 @@
         android:layout_above="@+id/imageBtn"
         android:layout_below="@+id/linear"/>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/delBtn"
+        android:text="Delete QR"
+        android:layout_alignParentBottom="true"
+        android:layout_alignLeft="@+id/listView"
+        />
+
+
+
     <ImageButton
         android:background="@drawable/btn"
         android:layout_width="wrap_content"
