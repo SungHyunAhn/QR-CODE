@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -52,13 +53,13 @@ public class InputDataActivity extends Activity{
     Spinner spinnerMonth;
     Spinner spinnerDay;
     EditText editStock;
-    String freshness;
     String position;
     Intent getIntent;
     int[] arr = new int[3];
+    String data;
+    String fileName;
 
-    Date date;
-
+    Date day;
     public static Date getDate(int year, int month, int date, int hour, int minute, int second) {
         Calendar cal = Calendar.getInstance();
         cal.set(year, month - 1, date, hour, minute, second);
@@ -156,90 +157,59 @@ public class InputDataActivity extends Activity{
         makeQRbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                QRCodeWriter gen = new QRCodeWriter();
+                try {
+                    day = new Date();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA);
+                    fileName = String.valueOf(sdf.format(day));
 
-                if(editName.length() == 0 && editStock.length() == 0)
-                    Toast.makeText(InputDataActivity.this, "식료품명이나 재고수량을 입력하세요", Toast.LENGTH_SHORT).show();
-
-                else {
-                    try {
-                        String data;
-                        String fileName;
-                        Date day = new Date();
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA);
-                        fileName = String.valueOf(sdf.format(day));
-
-                        if(!editName.getText().toString().equals("") && editStock.length() == 0) {
-                            fileName = fileName + " " + editName.getText().toString();
-                            data = editName.getText().toString();
-                            Log.d("data",data);
-                        }
-                        else if(!editStock.getText().toString().equals("") && editName.length() == 0) {
-                            fileName = fileName + " " + editStock.getText().toString();
-                            data = editStock.getText().toString();
-                            Log.d("data",data);
-                        }
-                        else {
-                            fileName = fileName + " " + editName.getText().toString() + " " + editStock.getText().toString();
-                            data =  editName.getText().toString() + "!@#@!" + editStock.getText().toString();
-                            Log.d("data",data);
-                        }
-
-                        final int WIDTH = 480;
-                        final int HEIGHT = 480;
-
-                        Hashtable hints = new Hashtable();
-                        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
-
-                        BitMatrix bmx = gen.encode(data, BarcodeFormat.QR_CODE, WIDTH, HEIGHT, hints);
-                        Bitmap bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888);
-                        for (int i = 0; i < WIDTH; ++i)
-                            for (int j = 0; j < HEIGHT; ++j) {
-                                bitmap.setPixel(i, j, bmx.get(i, j) ? Color.BLACK : Color.WHITE);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(InputDataActivity.this);
+                    builder.setTitle("식료품 삭제");
+                    builder.setMessage("정말로 식료품을 목록에서 삭제하시겠습니까?");
+                    builder.setCancelable(false);
+                    builder.setPositiveButton("식료품명", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            if(editName.length() == 0){
+                                Toast.makeText(InputDataActivity.this, "식료품명을 입력해주세요.", Toast.LENGTH_SHORT).show();
                             }
-
-                        ImageView view = (ImageView) findViewById(R.id.imageView);
-
-                        view.setImageBitmap(bitmap);
-
-                        view.invalidate();
-
-                        String extStorageDirectory = Environment.getExternalStorageDirectory().toString();
-
-                        String filePath = extStorageDirectory + "/QR Code Image/";
-                        File dir = new File(filePath);
-
-                        if(!dir.exists()){
-                            dir.mkdir();
+                            else {
+                                fileName = fileName + " 식료품명 : " + editName.getText().toString();
+                                data = editName.getText().toString();
+                                makeQRImage("식료품명");
+                            }
                         }
+                    });
 
-                        fileName = filePath+ fileName + ".png";
-
-                        File file = new File(fileName);
-
-                        OutputStream outStream = null;
-                        try {
-                            outStream = new FileOutputStream(file);
-                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream);
-                            outStream.flush();
-                            outStream.close();
-
-                            Toast.makeText(InputDataActivity.this, "QR CODE Image Saved", Toast.LENGTH_LONG).show();
-                            Log.d("file create", "File create");
-
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                            Toast.makeText(InputDataActivity.this, e.toString(), Toast.LENGTH_LONG).show();
-                            Log.d("FILE NOT FOUND", "File NOT FOUND");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            Toast.makeText(InputDataActivity.this, e.toString(), Toast.LENGTH_LONG).show();
-                            Log.d("IOE", "IOE");
+                    builder.setNeutralButton("재고등록", new DialogInterface.OnClickListener(){
+                        public void onClick(DialogInterface dialog, int which) {
+                            if(editName.length() == 0 || editStock.length() == 0){
+                                Toast.makeText(InputDataActivity.this, "재고의 정보를 전부 입력해주세요.", Toast.LENGTH_SHORT).show();
+                            }
+                            else {
+                                fileName = fileName + " 식료품명 : " + editName.getText().toString() + " 재고수량 : " + editStock.getText().toString();
+                                data = editName.getText().toString() + "!@#@!" + editStock.getText().toString();
+                                makeQRImage("재고등록");
+                            }
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.d("e", "error");
-                    }
+                    });
+
+                    builder.setNegativeButton("재고수량", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            if(editStock.length() == 0){
+                                Toast.makeText(InputDataActivity.this, "재고수량을 입력해주세요.", Toast.LENGTH_SHORT).show();
+                            }
+                            else {
+                                fileName = fileName + " 재고수량 : " + editStock.getText().toString();
+                                data = editStock.getText().toString();
+                                makeQRImage("재고수량");
+                            }
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("e", "error");
                 }
             }
         });
@@ -251,7 +221,6 @@ public class InputDataActivity extends Activity{
                 Intent intent = new Intent();
                 intent.putExtra("position", position);
                 intent.putExtra("name", editName.getText().toString());
-                //intent.putExtra("freshness", editFreshness.getText().toString());
                 intent.putExtra("year", String.valueOf(arr[0]));
                 intent.putExtra("month", String.valueOf(arr[1]));
                 intent.putExtra("day", String.valueOf(arr[2]));
@@ -272,7 +241,7 @@ public class InputDataActivity extends Activity{
                 else {
                     AlertDialog.Builder builder = new AlertDialog.Builder(InputDataActivity.this);
                     builder.setTitle("식료품 삭제")
-                            .setMessage("정말로 식료품을 목록에서 삭제하시겠습니까?")
+                            .setMessage("정말로 해당 항목을 목록에서 삭제하시겠습니까?")
                             .setCancelable(false)
                             .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -334,6 +303,75 @@ public class InputDataActivity extends Activity{
             Log.d("InputDataActivity", "Weird");
             super.onActivityResult(requestCode, resultCode, data);
             Toast.makeText(InputDataActivity.this, "else", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void makeQRImage(String type){
+        QRCodeWriter gen = new QRCodeWriter();
+
+        final int WIDTH = 480;
+        final int HEIGHT = 480;
+
+        Hashtable hints = new Hashtable();
+        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+
+        BitMatrix bmx = null;
+        try {
+            bmx = gen.encode(data, BarcodeFormat.QR_CODE, WIDTH, HEIGHT, hints);
+        }
+        catch (WriterException e) {
+            e.printStackTrace();
+        }
+        Bitmap bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888);
+        for (int i = 0; i < WIDTH; ++i)
+            for (int j = 0; j < HEIGHT; ++j) {
+                bitmap.setPixel(i, j, bmx.get(i, j) ? Color.BLACK : Color.WHITE);
+            }
+
+        ImageView view = (ImageView) findViewById(R.id.imageView);
+
+        view.setImageBitmap(bitmap);
+
+        view.invalidate();
+
+        String extStorageDirectory = Environment.getExternalStorageDirectory().toString();
+
+        String filePath = extStorageDirectory + "/QR Code Image/";
+        File dir = new File(filePath);
+
+        if(!dir.exists()){
+            dir.mkdir();
+        }
+
+        fileName = filePath + fileName + ".png";
+
+        File file = new File(fileName);
+
+        OutputStream outStream = null;
+        try {
+            outStream = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream);
+            outStream.flush();
+            outStream.close();
+            if(!type.equals("재고등록"))
+                Toast.makeText(InputDataActivity.this, type + " : " + data + " QR CODE Image Saved", Toast.LENGTH_LONG).show();
+            else{
+                String[] arrayData = new String[2];
+                arrayData = data.trim().split("!@#@!");
+                Toast.makeText(InputDataActivity.this, "식료품명 : " + arrayData[0] + " 재고수량 : " + arrayData[1] + " QR CODE Image Saved", Toast.LENGTH_LONG).show();
+            }
+            Log.d("file create", "File create");
+
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+            Toast.makeText(InputDataActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+            Log.d("FILE NOT FOUND", "File NOT FOUND");
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(InputDataActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+            Log.d("IOE", "IOE");
         }
     }
 
