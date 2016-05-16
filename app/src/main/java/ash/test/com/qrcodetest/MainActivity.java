@@ -184,8 +184,10 @@ public class MainActivity extends AppCompatActivity {
                }
                for(int i = 0; i < adapter.getCount(); i++){
                    inputData data = adapter.mListData.get(i);
-                   if(data.getName().equals(delData))
+                   if(data.getName().equals(delData)) {
                        adapter.remove(i);
+                       Toast.makeText(MainActivity.this, delData + " 항목을 삭제하였습니다.", Toast.LENGTH_SHORT).show();
+                   }
                }
            }
        }
