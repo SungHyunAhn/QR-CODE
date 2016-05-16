@@ -155,8 +155,8 @@ public class InputDataActivity extends Activity{
                     fileName = String.valueOf(sdf.format(day));
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(InputDataActivity.this);
-                    builder.setTitle("식료품 삭제");
-                    builder.setMessage("정말로 식료품을 목록에서 삭제하시겠습니까?");
+                    builder.setTitle("QR 코드 생성");
+                    builder.setMessage("QR 코드를 생성할 방식을 정해주세요.");
                     builder.setCancelable(false);
                     builder.setPositiveButton("식료품명", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
