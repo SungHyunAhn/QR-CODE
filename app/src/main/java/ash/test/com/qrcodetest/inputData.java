@@ -1,8 +1,6 @@
 package ash.test.com.qrcodetest;
 
-/**
- * Created by 성현 on 2016-05-05.
- */
+
 public class inputData {
     private String name;
     private String freshness;
