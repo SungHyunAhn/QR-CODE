@@ -54,6 +54,8 @@ public class InputDataActivity extends Activity{
     String data;
     String fileName;
 
+    IntentResult result;
+
     Date day;
 
     @Override
@@ -191,7 +193,7 @@ public class InputDataActivity extends Activity{
                             }
                             else {
                                 fileName = fileName + " 식료품명 : " + editName.getText().toString() + " 재고수량 : " + editStock.getText().toString();
-                                data = editName.getText().toString() + "!@#@!" + editStock.getText().toString();
+                                data = editName.getText().toString() + "!@#@!" + spinnerYear.getSelectedItem().toString() + "!@#@!" + spinnerMonth.getSelectedItem().toString() + "!@#@!" + spinnerDay.getSelectedItem().toString() + "!@#@!" + editStock.getText().toString();
                                 makeQRImage("재고등록");
                             }
                         }
@@ -273,7 +275,7 @@ public class InputDataActivity extends Activity{
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
 
         // QR 코드로 스캔한 경우
         if(result != null) {
@@ -286,6 +288,7 @@ public class InputDataActivity extends Activity{
             else {
                 Log.d("InputDataActivity", "Scanned");
                 String r = result.getContents();
+                Log.d("result", r);
 
                 /*
                 isNumber(String string) -> 입력한 문자열이 숫자로 변환 가능한지 알려주는 메소드
@@ -297,22 +300,25 @@ public class InputDataActivity extends Activity{
 
                 2.1의 입력 데이터에서 유통기한도 추가할 예정
                  */
-                if(isNumber(r))
+                if(isNumber(r)) {
                     editStock.setText(r);
+                    Log.d("setStock", editStock.getText().toString());
+                }
                 else {
                     String[] getDataArray;
                     String name;
                     String stock;
                     try {
                         getDataArray = r.trim().split("!@#@!");
-                        name = getDataArray[0];
-                        stock = getDataArray[1];
-                        editName.setText(name);
-                        editStock.setText(stock);
-                        Log.d("name",name);
-                        Log.d("stock",stock);
+                        for(int i=0; i < getDataArray.length; i++) {
+                            Log.d("getDataArray[" + i + "]", getDataArray[i]);
+                        }
+                        editName.setText(getDataArray[0]);
+                        editStock.setText(getDataArray[4]);
+                        setSpinner(getDataArray[1], getDataArray[2], getDataArray[3]);
                     }
                     catch(ArrayIndexOutOfBoundsException e){
+                        Log.d("setName", editName.getText().toString());
                         editName.setText(r);
                     }
                 }
@@ -394,9 +400,8 @@ public class InputDataActivity extends Activity{
             if(!type.equals("재고등록"))
                 Toast.makeText(InputDataActivity.this, type + " : " + data + " QR CODE Image Saved", Toast.LENGTH_LONG).show();
             else{
-                String[] arrayData = new String[2];
-                arrayData = data.trim().split("!@#@!");
-                Toast.makeText(InputDataActivity.this, "식료품명 : " + arrayData[0] + " 재고수량 : " + arrayData[1] + " QR CODE Image Saved", Toast.LENGTH_LONG).show();
+                String[] arrayData = data.trim().split("!@#@!");
+                Toast.makeText(InputDataActivity.this, "식료품명 : " + arrayData[0] + " 재고수량 : " + arrayData[4] + " QR CODE Image Saved", Toast.LENGTH_LONG).show();
             }
             Log.d("file create", "File create");
 
@@ -415,184 +420,207 @@ public class InputDataActivity extends Activity{
 
     // 전역변수로 만들어진 변수들의 값을 설정하는 함수, 즉 식료품명, 유통기한, 재고수량의 값들을 알맞게 세팅함
     private void setData(Intent getIntent) {
-        if(getIntent.getStringExtra("name") != null)
-            editName.setText(getIntent.getStringExtra("name"));
+        if(result == null){
+            if (getIntent.getStringExtra("name") != null)
+                editName.setText(getIntent.getStringExtra("name"));
 
-        String[] freshness;
-        try {
-            freshness = getIntent.getStringExtra("freshness").split("-");
+            if(getIntent.getStringExtra("new") == null) {
+                String date[] = getIntent.getStringExtra("freshness").split("-");
 
-            switch(freshness[0]){
-                case "16" :
-                    spinnerYear.setSelection(0);
-                    break;
-                case "17" :
-                    spinnerYear.setSelection(1);
-                    break;
-                case "18" :
-                    spinnerYear.setSelection(2);
-                    break;
-                case "19" :
-                    spinnerYear.setSelection(3);
-                    break;
-                case "20" :
-                    spinnerYear.setSelection(4);
-                    break;
-                case "21" :
-                    spinnerYear.setSelection(5);
-                    break;
-                case "22" :
-                    spinnerYear.setSelection(6);
-                    break;
-                case "23" :
-                    spinnerYear.setSelection(7);
-                    break;
+                setSpinner(date[0], date[1], date[2]);
             }
 
-            switch (freshness[1]){
-                case "1" :
-                    spinnerMonth.setSelection(0);
-                    break;
-                case "2" :
-                    spinnerMonth.setSelection(1);
-                    break;
-                case "3" :
-                    spinnerMonth.setSelection(2);
-                    break;
-                case "4" :
-                    spinnerMonth.setSelection(3);
-                    break;
-                case "5" :
-                    spinnerMonth.setSelection(4);
-                    break;
-                case "6" :
-                    spinnerMonth.setSelection(5);
-                    break;
-                case "7" :
-                    spinnerMonth.setSelection(6);
-                    break;
-                case "8" :
-                    spinnerMonth.setSelection(7);
-                    break;
-                case "9" :
-                    spinnerMonth.setSelection(8);
-                    break;
-                case "10" :
-                    spinnerMonth.setSelection(9);
-                    break;
-                case "11" :
-                    spinnerMonth.setSelection(10);
-                    break;
-                case "12" :
-                    spinnerMonth.setSelection(11);
-                    break;
-            }
+            if (getIntent.getStringExtra("stock") != null)
+                editStock.setText(getIntent.getStringExtra("stock"));
 
-            switch (freshness[2]){
-                case "1" :
-                    spinnerDay.setSelection(0);
-                    break;
-                case "2" :
-                    spinnerDay.setSelection(1);
-                    break;
-                case "3" :
-                    spinnerDay.setSelection(2);
-                    break;
-                case "4" :
-                    spinnerDay.setSelection(3);
-                    break;
-                case "5" :
-                    spinnerDay.setSelection(4);
-                    break;
-                case "6" :
-                    spinnerDay.setSelection(5);
-                    break;
-                case "7" :
-                    spinnerDay.setSelection(6);
-                    break;
-                case "8" :
-                    spinnerDay.setSelection(7);
-                    break;
-                case "9" :
-                    spinnerDay.setSelection(8);
-                    break;
-                case "10" :
-                    spinnerDay.setSelection(9);
-                    break;
-                case "11" :
-                    spinnerDay.setSelection(10);
-                    break;
-                case "12" :
-                    spinnerDay.setSelection(11);
-                    break;
-                case "13" :
-                    spinnerDay.setSelection(12);
-                    break;
-                case "14" :
-                    spinnerDay.setSelection(13);
-                    break;
-                case "15" :
-                    spinnerDay.setSelection(14);
-                    break;
-                case "16" :
-                    spinnerDay.setSelection(15);
-                    break;
-                case "17" :
-                    spinnerDay.setSelection(16);
-                    break;
-                case "18" :
-                    spinnerDay.setSelection(17);
-                    break;
-                case "19" :
-                    spinnerDay.setSelection(18);
-                    break;
-                case "20" :
-                    spinnerDay.setSelection(19);
-                    break;
-                case "21" :
-                    spinnerDay.setSelection(20);
-                    break;
-                case "22" :
-                    spinnerDay.setSelection(21);
-                    break;
-                case "23" :
-                    spinnerDay.setSelection(22);
-                    break;
-                case "24" :
-                    spinnerDay.setSelection(23);
-                    break;
-                case "25" :
-                    spinnerDay.setSelection(24);
-                    break;
-                case "26" :
-                    spinnerDay.setSelection(25);
-                    break;
-                case "27" :
-                    spinnerDay.setSelection(26);
-                    break;
-                case "28" :
-                    spinnerDay.setSelection(27);
-                    break;
-                case "29" :
-                    spinnerDay.setSelection(28);
-                    break;
-                case "30" :
-                    spinnerDay.setSelection(29);
-                    break;
-                case "31" :
-                    spinnerDay.setSelection(30);
-                    break;
+            if (getIntent.getStringExtra("position") != null) {
+                position = getIntent.getStringExtra("position");
             }
         }
-        catch (NullPointerException e){
-            e.printStackTrace();
+        else{
+
+        }
+    }
+
+    private void setSpinner(String year, String month, String day){
+        switch(year){
+            case "16" :
+                spinnerYear.setSelection(0);
+                break;
+            case "17" :
+                spinnerYear.setSelection(1);
+                break;
+            case "18" :
+                spinnerYear.setSelection(2);
+                break;
+            case "19" :
+                spinnerYear.setSelection(3);
+                break;
+            case "20" :
+                spinnerYear.setSelection(4);
+                break;
+            case "21" :
+                spinnerYear.setSelection(5);
+                break;
+            case "22" :
+                spinnerYear.setSelection(6);
+                break;
+            case "23" :
+                spinnerYear.setSelection(7);
+                break;
         }
 
-        if(getIntent.getStringExtra("stock") != null)
-            editStock.setText(getIntent.getStringExtra("stock"));
+        switch (month){
+            case "1" :
+            case "01" :
+                spinnerMonth.setSelection(0);
+                break;
+            case "2" :
+            case "02" :
+                spinnerMonth.setSelection(1);
+                break;
+            case "3" :
+            case "03" :
+                spinnerMonth.setSelection(2);
+                break;
+            case "4" :
+            case "04" :
+                spinnerMonth.setSelection(3);
+                break;
+            case "5" :
+            case "05" :
+                spinnerMonth.setSelection(4);
+                break;
+            case "6" :
+            case "06" :
+                spinnerMonth.setSelection(5);
+                break;
+            case "7" :
+            case "07" :
+                spinnerMonth.setSelection(6);
+                break;
+            case "8" :
+            case "08" :
+                spinnerMonth.setSelection(7);
+                break;
+            case "9" :
+            case "09" :
+                spinnerMonth.setSelection(8);
+                break;
+            case "10" :
+                spinnerMonth.setSelection(9);
+                break;
+            case "11" :
+                spinnerMonth.setSelection(10);
+                break;
+            case "12" :
+                spinnerMonth.setSelection(11);
+                break;
+        }
 
-        if(getIntent.getStringExtra("position") != null) {
-            position = getIntent.getStringExtra("position");
+        switch (day){
+            case "1" :
+            case "01" :
+                spinnerDay.setSelection(0);
+                break;
+            case "2" :
+            case "02" :
+                spinnerDay.setSelection(1);
+                break;
+            case "3" :
+            case "03" :
+                spinnerDay.setSelection(2);
+                break;
+            case "4" :
+            case "04" :
+                spinnerDay.setSelection(3);
+                break;
+            case "5" :
+            case "05" :
+                spinnerDay.setSelection(4);
+                break;
+            case "6" :
+            case "06" :
+                spinnerDay.setSelection(5);
+                break;
+            case "7" :
+            case "07" :
+                spinnerDay.setSelection(6);
+                break;
+            case "8" :
+            case "08" :
+                spinnerDay.setSelection(7);
+                break;
+            case "9" :
+            case "09" :
+                spinnerDay.setSelection(8);
+                break;
+            case "10" :
+                spinnerDay.setSelection(9);
+                break;
+            case "11" :
+                spinnerDay.setSelection(10);
+                break;
+            case "12" :
+                spinnerDay.setSelection(11);
+                break;
+            case "13" :
+                spinnerDay.setSelection(12);
+                break;
+            case "14" :
+                spinnerDay.setSelection(13);
+                break;
+            case "15" :
+                spinnerDay.setSelection(14);
+                break;
+            case "16" :
+                spinnerDay.setSelection(15);
+                break;
+            case "17" :
+                spinnerDay.setSelection(16);
+                break;
+            case "18" :
+                spinnerDay.setSelection(17);
+                break;
+            case "19" :
+                spinnerDay.setSelection(18);
+                break;
+            case "20" :
+                spinnerDay.setSelection(19);
+                break;
+            case "21" :
+                spinnerDay.setSelection(20);
+                break;
+            case "22" :
+                spinnerDay.setSelection(21);
+                break;
+            case "23" :
+                spinnerDay.setSelection(22);
+                break;
+            case "24" :
+                spinnerDay.setSelection(23);
+                break;
+            case "25" :
+                spinnerDay.setSelection(24);
+                break;
+            case "26" :
+                spinnerDay.setSelection(25);
+                break;
+            case "27" :
+                spinnerDay.setSelection(26);
+                break;
+            case "28" :
+                spinnerDay.setSelection(27);
+                break;
+            case "29" :
+                spinnerDay.setSelection(28);
+                break;
+            case "30" :
+                spinnerDay.setSelection(29);
+                break;
+            case "31" :
+                spinnerDay.setSelection(30);
+                break;
         }
     }
 

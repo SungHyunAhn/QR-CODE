@@ -74,12 +74,8 @@ public class Explorer extends Activity {
 
                     intent.putExtra(Intent.EXTRA_STREAM, uri);
                     startActivity(Intent.createChooser(intent,"공유"));
-
                 }
             });
         }
-
-
-
     }
 }
